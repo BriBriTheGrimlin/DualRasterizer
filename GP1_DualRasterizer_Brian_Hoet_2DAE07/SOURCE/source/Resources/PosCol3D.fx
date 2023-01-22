@@ -114,7 +114,6 @@ float4 PS_Phong(VS_OUTPUT input, SamplerState state) : SV_TARGET
     const float4x4 tangentSpaceAxis = float4x4(float4(input.Tangent, 0.0f), float4(binormal, 0.0f), float4(input.Normal, 0.0), float4(0.0f, 0.0f, 0.0f, 1.0f));
     const float3 currentNormalMap = 2.0f * gNormalMap.Sample(state, input.UV).rgb - float3(1.0f, 1.0f, 1.0f);
     const float3 normal = mul(float4(currentNormalMap, 0.0f), tangentSpaceAxis);
-
     const float3 viewDirection = normalize(input.WorldPosition.xyz - gViewInverseMatrix[3].xyz);
 
     const float observedArea = saturate(dot(normal, -gLightDirection));

@@ -3,42 +3,48 @@
 #include "Texture.h"
 
 
-Effect::Effect(ID3D11Device* pDevice, const std::wstring& assetFile):
-	m_pEffect { LoadEffect(pDevice, assetFile) }
+Effect::Effect(ID3D11Device* pDevice, const std::wstring& assetFile) :
+	m_pEffect{ LoadEffect(pDevice, assetFile) },
+	m_pDevice{ pDevice },
+	m_CullMode{ CullMode::None }
 {
 
 	m_pTechnique = m_pEffect->GetTechniqueByName("PointFilteringTechnique");
 	if (!m_pTechnique->IsValid())
 	{
-		std::wcout << L"Technique not valid\n";
+		std::cout << "Technique not valid\n";
 	}
 	//Matrices
 	m_pMatWorldViewProjVariable = m_pEffect->GetVariableByName("gWorldViewProj")->AsMatrix();
 	if (!m_pMatWorldViewProjVariable->IsValid())
 	{
-		std::wcout << L"m_pMatWorldViewProjVariable not valid\n";
+		std::cout << "m_pMatWorldViewProjVariable not valid\n";
 	}
 
 	m_pWorldVariable = m_pEffect->GetVariableByName("gWorldMatrix")->AsMatrix();
 	if (!m_pWorldVariable->IsValid())
 	{
-		std::wcout << L"m_pWorldVariable not valid!\n";
+		std::cout << "m_pWorldVariable not valid!\n";
 	}
 
 	m_pViewInverseVariable = m_pEffect->GetVariableByName("gViewInverseMatrix")->AsMatrix();
 	if (!m_pViewInverseVariable->IsValid())
 	{
-		std::wcout << L"m_pViewInverseVariable not valid!\n";
+		std::cout << "m_pViewInverseVariable not valid!\n";
 	}
 
 	//Shading
 	m_pDiffuseMapVariable = m_pEffect->GetVariableByName("gDiffuseMap")->AsShaderResource();
 	if (!m_pDiffuseMapVariable->IsValid())
 	{
-		std::wcout << L"m_pDiffuseMapVariable not valid!\n";
+		std::cout << "m_pDiffuseMapVariable not valid!\n";
 	}
 
-
+	m_pRasterizerStateVariable = m_pEffect->GetVariableByName("gRasterizerState")->AsRasterizer();
+	if (!m_pRasterizerStateVariable->IsValid())
+	{
+		std::cout << "m_pRasterizerVariable not valid!\n";
+	}
 }
 
 Effect::~Effect()
@@ -51,11 +57,11 @@ Effect::~Effect()
 }
 
 
-void Effect::ToggleTechniques()
+void Effect::ToggleSampling()
 {
 		switch (m_SampleMethod)
 		{
-		case Effect::SampleMethod::Point:
+		case SampleMethod::Point:
 			m_pTechnique = m_pEffect->GetTechniqueByName("PointFilteringTechnique");
 			m_SampleMethod = SampleMethod::Linear;
 			if (!m_pTechnique->IsValid())
@@ -93,21 +99,28 @@ void Effect::ToggleCullMode()
 
 	switch (m_CullMode)
 	{
-	case CullMode::Front:
-		m_CullMode = CullMode::Back;
-		rasterizerDesc.CullMode = D3D11_CULL_FRONT;
-		break;
-	case CullMode::Back:
-		m_CullMode = CullMode::None;
-		rasterizerDesc.CullMode = D3D11_CULL_BACK;
-		break;
-	case CullMode::None:
-		m_CullMode = CullMode::Front;
-		rasterizerDesc.CullMode = D3D11_CULL_NONE;
-		break;
-	default:
-		break;
+		case CullMode::Front:
+		{
+			rasterizerDesc.CullMode = D3D11_CULL_FRONT;
+			m_CullMode = CullMode::Back;
+			break;
+		}
+		case CullMode::Back:
+		{
+			rasterizerDesc.CullMode = D3D11_CULL_BACK;
+			m_CullMode = CullMode::None;
+			break;
+		}
+		case CullMode::None:
+		{
+			rasterizerDesc.CullMode = D3D11_CULL_NONE;
+			m_CullMode = CullMode::Front;
+			break;
+		}
 	}
+
+	HRESULT hr{ m_pDevice->CreateRasterizerState(&rasterizerDesc, &m_pRasterizerState) };
+	hr = m_pRasterizerStateVariable->SetRasterizerState(0, m_pRasterizerState);
 }
 
 void Effect::SetProjectionMatrix(const dae::Matrix& matrix) const
@@ -157,6 +170,25 @@ int Effect::GetSampleState() const
 		return 1;
 		break;
 	case SampleMethod::Anisotropic:
+		return 2;
+		break;
+	default:
+		return 4;
+		break;
+	}
+}
+
+int Effect::GetCullMode() const
+{
+	switch (m_CullMode)
+	{
+	case CullMode::Front:
+		return 0;
+		break;
+	case CullMode::Back:
+		return 1;
+		break;
+	case CullMode::None:
 		return 2;
 		break;
 	default:

@@ -8,19 +8,19 @@ ShadedEffect::ShadedEffect(ID3D11Device* pDevice, const std::wstring& assetFile)
 	m_pNormalMapVariable = m_pEffect->GetVariableByName("gNormalMap")->AsShaderResource();
 	if (!m_pNormalMapVariable->IsValid())
 	{
-		std::wcout << L"m_pNormalMapVariable not valid!\n";
+		std::cout << "m_pNormalMapVariable not valid!\n";
 	}
 
 	m_pSpecularMapVariable = m_pEffect->GetVariableByName("gSpecularMap")->AsShaderResource();
 	if (!m_pSpecularMapVariable->IsValid())
 	{
-		std::wcout << L"m_pSpecularMapVariable not valid!\n";
+		std::cout << "m_pSpecularMapVariable not valid!\n";
 	}
 
 	m_pGlossinessMapVariable = m_pEffect->GetVariableByName("gGlossinessMap")->AsShaderResource();
 	if (!m_pGlossinessMapVariable->IsValid())
 	{
-		std::wcout << L"m_pGlossinessMapVariable not valid!\n";
+		std::cout << "m_pGlossinessMapVariable not valid!\n";
 	}
 }
 

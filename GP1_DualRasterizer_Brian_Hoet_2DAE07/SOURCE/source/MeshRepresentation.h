@@ -29,6 +29,7 @@ public:
 	void ToggleSampling() const;
 	int GetSampleState() const;
 	void ToggleCullMode() const;
+	int GetCullMode() const;
 
 private:
 	ID3D11Buffer* m_pVertexBuffer;

@@ -30,7 +30,7 @@ int main(int argc, char* args[])
 	const uint32_t height = 480;
 
 	SDL_Window* pWindow = SDL_CreateWindow(
-		"DirectX - ***Hoet Brian, 2DAE07***",
+		"DualRasterizer - ***Hoet Brian, 2DAE07***",
 		SDL_WINDOWPOS_UNDEFINED,
 		SDL_WINDOWPOS_UNDEFINED,
 		width, height, 0);
@@ -102,6 +102,7 @@ int main(int argc, char* args[])
 
 					case SDL_SCANCODE_F11:
 					g_PrintFPS = !g_PrintFPS;
+					pRenderer->ToggleFPS(g_PrintFPS);
 					break;
 
 					case SDL_SCANCODE_I:

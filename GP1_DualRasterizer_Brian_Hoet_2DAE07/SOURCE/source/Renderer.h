@@ -30,20 +30,28 @@ using namespace dae;
 		//Shared
 		void ToggleMode();
 		void ToggleRot();
-		void ToggleCullMode();
+		void ToggleCullMode() const;
 		void ToggleBackGround();
+		void ToggleFPS(bool FpsOnOff) const;
 
-		//DirectX
+		//Hardware
 		void ToggleFireMesh();
 		void ToggleSampling() const;
 
-		//Rasterizer
+		//Software
 		void ToggleLightMode();
 		void ToggleNor();
 		void ToggleBuffer();
 		void ToggleBoxVisual();
 
 	private:
+		//Color
+		//http://wp.xin.at/archives/3064
+		const int m_Yellow{ 6 };
+		const int m_Green{ 10 };
+		const int m_Magenta{ 13 };
+		const int m_Red{ 12 };
+		const int m_White{ 15 };
 		
 		bool m_UniformBackGround{ false };
 		bool m_DirectXMode{ true };
@@ -61,7 +69,7 @@ using namespace dae;
 
 		Camera m_Camera;
 
-		//DIRECTX
+		//Hardware
 		bool m_FireMeshEnabled{ true };
 
 		HRESULT InitializeDirectX();
@@ -78,7 +86,7 @@ using namespace dae;
 		void RenderDirectX() const;
 		void UpdateDirectX(const Timer* pTimer);
 
-		//Rasterizer
+		//Software
 		bool m_NorEnabled{ true };
 		bool m_VisBuffer{ false };
 		bool m_VisBox{ false };

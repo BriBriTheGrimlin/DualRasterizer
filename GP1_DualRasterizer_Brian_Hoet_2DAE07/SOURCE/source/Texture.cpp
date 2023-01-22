@@ -42,8 +42,8 @@ Texture::Texture(ID3D11Device* pDevice, const std::string& path)
 
 
 	m_pSurfacePixels = (uint32_t*)m_pSurface->pixels;
-
 }
+
 Texture::~Texture()
 {
 	if(m_pResource)
@@ -78,10 +78,6 @@ Texture::Texture(SDL_Surface* pSurface) :
 
 Texture* Texture::LoadFromFile(const std::string& path)
 {
-	//TODO
-	//Load SDL_Surface using IMG_LOAD
-	//Create & Return a new Texture Object (using SDL_Surface)
-
 	const auto loadedImage{ IMG_Load(path.c_str()) };
 	assert(loadedImage != nullptr && "There was no file found");
 

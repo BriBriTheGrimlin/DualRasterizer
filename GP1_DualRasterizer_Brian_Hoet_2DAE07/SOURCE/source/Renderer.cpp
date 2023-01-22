@@ -5,11 +5,7 @@
 #include "ShadedEffect.h"
 #include "Utils.h"
 
-#define DEFAULTCOLOR   "\033[0m"
-#define RED     "\033[31m"
-#define GREEN   "\033[32m"
-#define YELLOW  "\033[33m"
-#define MAGENTA "\033[35m"
+HANDLE m_hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
 using namespace dae;
 using namespace std;
@@ -35,15 +31,16 @@ Renderer::Renderer(SDL_Window* pWindow) :
 	}
 
 	ShadedEffect* pShadedEffect{ new ShadedEffect(m_pDevice, L"Resources/PosCol3D.fx") };
-	
-	Texture vehicleDiffuseTexture{ m_pDevice, "Resources/vehicle_diffuse.png" };
-	Texture vehicleNormalTexture{ m_pDevice,"Resources/vehicle_normal.png" };
-	Texture vehicleSpecularTexture{ m_pDevice,"Resources/vehicle_specular.png" };
-	Texture vehicleGlossinessTexture{ m_pDevice,"Resources/vehicle_gloss.png" };
-	pShadedEffect->SetDiffuseMap(&vehicleDiffuseTexture);
-	pShadedEffect->SetNormalMap(&vehicleNormalTexture);
-	pShadedEffect->SetSpecularMap(&vehicleSpecularTexture);
-	pShadedEffect->SetGlossinessMap(&vehicleGlossinessTexture);
+
+	m_pDiffuseTxt = new Texture(m_pDevice, "Resources/vehicle_diffuse.png");
+	m_pNormalTxt = new Texture(m_pDevice, "Resources/vehicle_normal.png");
+	m_pSpecularTxt = new Texture(m_pDevice, "Resources/vehicle_specular.png");
+	m_pGlossTxt = new Texture(m_pDevice, "Resources/vehicle_gloss.png");
+
+	pShadedEffect->SetDiffuseMap(m_pDiffuseTxt);
+	pShadedEffect->SetNormalMap(m_pNormalTxt);
+	pShadedEffect->SetSpecularMap(m_pSpecularTxt);
+	pShadedEffect->SetGlossinessMap(m_pGlossTxt);
 	
 	m_pMeshRepresentation.push_back(new MeshRepresentation{ m_pDevice, "Resources/vehicle.obj", std::move(pShadedEffect) });
 
@@ -55,7 +52,6 @@ Renderer::Renderer(SDL_Window* pWindow) :
 	m_pFireMesh = (new MeshRepresentation{ m_pDevice,"Resources/fireFX.obj",std::move(pTransparentEffect) });
 	m_pMeshRepresentation.push_back(m_pFireMesh);
 
-
 	//INITIALIZE RASTERIZER
 
 	//Create Buffers
@@ -64,12 +60,6 @@ Renderer::Renderer(SDL_Window* pWindow) :
 	m_pBackBufferPixels = (uint32_t*)m_pBackBuffer->pixels;
 
 	m_pDepthBufferPixels = new float[m_Width * m_Height];
-
-	//initialize Textures
-	m_pDiffuseTxt = Texture::LoadFromFile("Resources/vehicle_diffuse.png");
-	m_pNormalTxt = Texture::LoadFromFile("Resources/vehicle_normal.png");
-	m_pSpecularTxt = Texture::LoadFromFile("Resources/vehicle_specular.png");
-	m_pGlossTxt = Texture::LoadFromFile("Resources/vehicle_gloss.png");
 
 	//Mesh
 	MeshRasterizer& mesh = m_pMeshesRast.emplace_back(MeshRasterizer{});
@@ -216,7 +206,7 @@ HRESULT Renderer::InitializeDirectX()
 
 void Renderer::PrintText() const
 {
-		cout << YELLOW;
+		SetConsoleTextAttribute(m_hConsole, m_Yellow);
 		cout << "[Key bindings - SHARED]\n";
 		cout << "	[F1]  Toggle Rasterizer Mode (HARDWARE/SOFTWARE)\n";
 		cout << "	[F2]  Toggle Vehicle Rotation (ON/OFF)\n";
@@ -224,22 +214,24 @@ void Renderer::PrintText() const
 		cout << "	[F10] Toggle Uniform ClearColor (ON/OFF)\n";
 		cout << "	[F11] Toggle Print FPS (ON/OFF)\n";
 		cout << '\n';
-		cout << GREEN;
+		SetConsoleTextAttribute(m_hConsole, m_Green);
 		cout << "[Key bindings - HARDWARE]\n";
 		cout << "	[F3]  Toggle FireMesh (ON/OFF)\n";
 		cout << "	[F4]  Cycle Sample State (POINT/LINEAR/ANISOTROPIC)\n";
 		cout << '\n';
-		cout << MAGENTA;
+		//cout << MAGENTA;
+		SetConsoleTextAttribute(m_hConsole, m_Magenta);
 		cout << "[Key bindings - SOFTWARE]\n";
 		cout << "	[F5]  Cycle Shading Mode (COMBINED/OBSERVED_AREA/DIFFUSE/SPECULAR)\n";
 		cout << "	[F6]  Toggle NormalMap (ON/OFF)\n";
 		cout << "	[F7]  Toggle DepthBuffer Visualization (ON/OFF)\n";
 		cout << "	[F8]  Toggle BoundingBox Visualization (ON/OFF)\n";
 		cout << '\n';
-		cout << RED;
+		//cout << RED;
+		SetConsoleTextAttribute(m_hConsole, m_Red);
 		cout << "[I] Get Information List\n";
 		cout << '\n';
-		cout << DEFAULTCOLOR;
+		SetConsoleTextAttribute(m_hConsole, m_White);
 }
 
 void Renderer::Update(const Timer* pTimer)
@@ -533,54 +525,85 @@ void Renderer::ToggleMode()
 {
 	m_DirectXMode = !m_DirectXMode;
 
+	SetConsoleTextAttribute(m_hConsole, m_Yellow);
+
 	if (m_DirectXMode)
 	{
-		std::cout << YELLOW << "DirectX\n";
+		std::cout << "Hardware\n";
 	}
 	else
 	{
-		std::cout << YELLOW << "Rasterizer\n";
+		std::cout << "Software\n";
 	}
-	std::cout << DEFAULTCOLOR;
+	SetConsoleTextAttribute(m_hConsole, m_White);
 }
 void Renderer::ToggleRot()
 {
 	m_RotEnabled = !m_RotEnabled;
 
+	SetConsoleTextAttribute(m_hConsole, m_Yellow);
+
 	if(m_RotEnabled)
 	{
-		std::cout << YELLOW << "Rotation Enabled\n";
+		std::cout << "Rotation Enabled\n";
 	}
 	else
 	{
-		std::cout << YELLOW << "Rotation Disabled\n";
+		std::cout << "Rotation Disabled\n";
 	}
-	std::cout << DEFAULTCOLOR;
+	SetConsoleTextAttribute(m_hConsole, m_White);
 }
-
-void Renderer::ToggleCullMode()
+void Renderer::ToggleCullMode() const
 {
-	std::cout << YELLOW << " Does Not Work!\n";
-	std::cout << DEFAULTCOLOR;
-	for (const auto& pMesh : m_pMeshRepresentation)
+	if (m_DirectXMode)
 	{
-		pMesh->ToggleCullMode();
+		SetConsoleTextAttribute(m_hConsole, m_Yellow);
+
+		m_pMeshRepresentation[0]->ToggleCullMode();
+
+		if (m_pMeshRepresentation[0]->GetCullMode() == 0)
+		{
+			std::cout << "Front Culling\n";
+		}
+		if (m_pMeshRepresentation[0]->GetCullMode() == 1)
+		{
+			std::cout << "Back Culling\n";
+		}
+		if (m_pMeshRepresentation[0]->GetCullMode() == 2)
+		{
+			std::cout << "No Culling\n";
+		}
+		SetConsoleTextAttribute(m_hConsole, m_White);
 	}
 }
-
 void Renderer::ToggleBackGround()
 {
 	m_UniformBackGround = !m_UniformBackGround;
 
+	SetConsoleTextAttribute(m_hConsole, m_Yellow);
+
 	if(m_UniformBackGround)
 	{
-		std::cout << YELLOW << "Uniformed BackGround\n";
+		std::cout << "Uniformed BackGround\n";
 	}
 	else
 	{
-		std::cout << YELLOW << "Unique BackGround\n";
+		std::cout << "Unique BackGround\n";
 	}
-	std::cout << DEFAULTCOLOR;
+	SetConsoleTextAttribute(m_hConsole, m_White);
+}
+void Renderer::ToggleFPS(bool FpsOnOff) const
+{
+	SetConsoleTextAttribute(m_hConsole, m_Yellow);
+	if (FpsOnOff)
+	{
+		std::cout << "Print FPS ON\n";
+	}
+	else
+	{
+		std::cout << "Print FPS OFF\n";
+	}
+	SetConsoleTextAttribute(m_hConsole, m_White);
 }
 
 //Hardware
@@ -589,61 +612,67 @@ void Renderer::ToggleFireMesh()
 	if (m_DirectXMode)
 	{
 		m_FireMeshEnabled = !m_FireMeshEnabled;
+
+		SetConsoleTextAttribute(m_hConsole, m_Green);
+		if (m_FireMeshEnabled)
+		{
+			std::cout << "FireMesh Enabled\n";
+		}
+		else
+		{
+			std::cout << "FireMesh Disabled\n";
+		}
+		SetConsoleTextAttribute(m_hConsole, m_White);
 	}
-	if(m_FireMeshEnabled)
-	{
-		std::cout << GREEN << " FireMesh Enabled\n";
-	}
-	else
-	{
-		std::cout << GREEN << " FireMesh Disabled\n";
-	}
-	std::cout << DEFAULTCOLOR;
+	
 }
 void Renderer::ToggleSampling() const
 {
 	if (m_DirectXMode)
 	{
+		SetConsoleTextAttribute(m_hConsole, m_Green);
+
 		for (auto& Mesh : m_pMeshRepresentation)
 		{
 			Mesh->ToggleSampling();
-
-			
 		}
 		if (m_pMeshRepresentation[0]->GetSampleState() == 0)
 		{
-			std::cout << GREEN << " Point\n";
+			std::cout << "Point\n";
 		}
 		if (m_pMeshRepresentation[0]->GetSampleState() == 1)
 		{
-			std::cout << GREEN << " Linear\n";
+			std::cout << "Linear\n";
 		}
 		if (m_pMeshRepresentation[0]->GetSampleState() == 2)
 		{
-			std::cout << GREEN << " Anisotropic\n";
+			std::cout << "Anisotropic\n";
 		}
-		std::cout << DEFAULTCOLOR;
+		SetConsoleTextAttribute(m_hConsole, m_White);
 	}
 	
 }
 
-//Rasterizer
+//Software
 void Renderer::ToggleNor()
 {
 	if (!m_DirectXMode)
 	{
 		m_NorEnabled = !m_NorEnabled;
 
+		SetConsoleTextAttribute(m_hConsole, m_Magenta);
+
 		if(m_NorEnabled)
 		{
-			std::cout << MAGENTA << "Normals Enabled\n";
+			std::cout << "Normals Enabled\n";
 		}
 		else
 		{
-			std::cout << MAGENTA << "Normals Disabled\n";
+			std::cout << "Normals Disabled\n";
 		}
+
+		SetConsoleTextAttribute(m_hConsole, m_White);
 	}
-	std::cout << DEFAULTCOLOR;
 }
 void Renderer::ToggleBuffer()
 {
@@ -651,17 +680,19 @@ void Renderer::ToggleBuffer()
 	{
 		m_VisBuffer = !m_VisBuffer;
 
+		SetConsoleTextAttribute(m_hConsole, m_Magenta);
 
 		if (m_VisBuffer)
 		{
-			std::cout << MAGENTA << "Visual Buffer Enabled\n";
+			std::cout << "Visual Buffer Enabled\n";
 		}
 		else
 		{
-			std::cout << MAGENTA << " visual Buffer Disabled\n";
+			std::cout << "visual Buffer Disabled\n";
 		}
+		SetConsoleTextAttribute(m_hConsole, m_White);
 	}
-	std::cout << DEFAULTCOLOR;
+	
 }
 void Renderer::ToggleBoxVisual()
 {
@@ -669,45 +700,52 @@ void Renderer::ToggleBoxVisual()
 	{
 		m_VisBox = !m_VisBox;
 
+		SetConsoleTextAttribute(m_hConsole, m_Magenta);
+
 		if (m_VisBox)
 		{
-			std::cout << MAGENTA << "Visual Box Enabled\n";
+			std::cout << "Visual Box Enabled\n";
 		}
 		else
 		{
-			std::cout << MAGENTA << "Visual Box Disabled\n";
+			std::cout << "Visual Box Disabled\n";
 		}
+
+		SetConsoleTextAttribute(m_hConsole, m_White);
+
 	}
-	std::cout << DEFAULTCOLOR;
+	
 }
 void Renderer::ToggleLightMode()
 {
 	if (!m_DirectXMode)
 	{
+		SetConsoleTextAttribute(m_hConsole, m_Magenta);
+
 		switch (m_CurrentLightmode)
 		{
 		case LightMode::Combined:
 			m_CurrentLightmode = LightMode::Diffuse;
-			std::cout << MAGENTA << "Diffuse\n";
+			std::cout << "Diffuse\n";
 			break;
 		case LightMode::Diffuse:
 			m_CurrentLightmode = LightMode::Specular;
-			std::cout << MAGENTA << "Specular\n";
+			std::cout << "Specular\n";
 			break;
 		case LightMode::Specular:
 			m_CurrentLightmode = LightMode::ObservedArea;
-			std::cout << MAGENTA << "ObservedArea\n";
+			std::cout << "ObservedArea\n";
 			break;
 		case LightMode::ObservedArea:
 			m_CurrentLightmode = LightMode::Combined;
-			std::cout << MAGENTA << "Combined\n";
+			std::cout << "Combined\n";
 			break;
 		default:
 			break;
 		}
-	}
 
-	std::cout << DEFAULTCOLOR;
+		SetConsoleTextAttribute(m_hConsole, m_White);
+	}
 }
 
 void Renderer::VertexTransformationFunctionW4(std::vector<MeshRasterizer>& meshes) const

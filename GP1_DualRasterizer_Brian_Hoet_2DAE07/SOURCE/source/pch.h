@@ -7,6 +7,7 @@
 #include <memory>
 #define NOMINMAX  //for directx
 
+
 // SDL Headers
 #include "SDL.h"
 #include "SDL_syswm.h"
@@ -22,3 +23,4 @@
 // Framework Headers
 #include "Timer.h"
 #include "Math.h"
+

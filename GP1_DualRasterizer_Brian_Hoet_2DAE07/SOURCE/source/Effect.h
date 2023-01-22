@@ -26,8 +26,9 @@ public:
 	ID3D11InputLayout* GetInputLayout() const;
 
 	int GetSampleState() const;
+	int GetCullMode() const;
 
-	void ToggleTechniques();
+	void ToggleSampling();
 	void ToggleCullMode();
 
 protected:
@@ -46,6 +47,11 @@ protected:
 		None
 	};
 	CullMode m_CullMode;
+
+	ID3D11Device* m_pDevice;
+
+	ID3D11RasterizerState* m_pRasterizerState;
+	ID3DX11EffectRasterizerVariable* m_pRasterizerStateVariable;
 
 
 	ID3DX11Effect* m_pEffect;

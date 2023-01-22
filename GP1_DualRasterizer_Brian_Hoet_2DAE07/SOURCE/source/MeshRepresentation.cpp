@@ -130,7 +130,7 @@ void MeshRepresentation::Update(const dae::Matrix& viewProjMatrix, const dae::Ma
 
 void MeshRepresentation::ToggleSampling() const
 {
-	m_pEffect->ToggleTechniques();
+	m_pEffect->ToggleSampling();
 }
 
 int MeshRepresentation::GetSampleState() const
@@ -141,4 +141,9 @@ int MeshRepresentation::GetSampleState() const
 void MeshRepresentation::ToggleCullMode() const
 {
 	m_pEffect->ToggleCullMode();
+}
+
+int MeshRepresentation::GetCullMode() const
+{
+	return m_pEffect->GetCullMode();
 }
