@@ -115,8 +115,6 @@ void MeshRepresentation::Render(ID3D11DeviceContext* pDeviceContext)
 		m_pEffect->GetTechnique()->GetPassByIndex(p)->Apply(0, pDeviceContext);
 		pDeviceContext->DrawIndexed(m_NumIndices, 0, 0);
 	}
-
-
 }
 
 void MeshRepresentation::Update(const dae::Matrix& viewProjMatrix, const dae::Matrix& viewInvertMatrix, float angle, Vector3 pos)
@@ -138,4 +136,9 @@ void MeshRepresentation::ToggleSampling() const
 int MeshRepresentation::GetSampleState() const
 {
 	return m_pEffect->GetSampleState();
+}
+
+void MeshRepresentation::ToggleCullMode() const
+{
+	m_pEffect->ToggleCullMode();
 }

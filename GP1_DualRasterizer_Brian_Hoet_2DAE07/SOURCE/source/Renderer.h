@@ -1,12 +1,13 @@
 #pragma once
 #include "Camera.h"
+#include "Texture.h"
 
 struct SDL_Window;
 struct SDL_Surface;
 class MeshRepresentation;
 class Texture;
 struct Vertex_Out;
-struct MeshRast;
+struct MeshRasterizer;
 
 using namespace dae;
 
@@ -24,15 +25,23 @@ using namespace dae;
 		void Update(const Timer* pTimer);
 		void Render();
 
-		void ToggleLightMode();
+		void PrintText() const;
+		
+		//Shared
 		void ToggleMode();
 		void ToggleRot();
+		void ToggleCullMode();
+		void ToggleBackGround();
+
+		//DirectX
 		void ToggleFireMesh();
 		void ToggleSampling() const;
+
+		//Rasterizer
+		void ToggleLightMode();
 		void ToggleNor();
 		void ToggleBuffer();
 		void ToggleBoxVisual();
-		void ToggleBackGround();
 
 	private:
 		
@@ -88,7 +97,7 @@ using namespace dae;
 		SDL_Surface* m_pFrontBuffer{ nullptr };
 		SDL_Surface* m_pBackBuffer{ nullptr };
 		uint32_t* m_pBackBufferPixels{};
-		std::vector<MeshRast> m_pMeshesRast;
+		std::vector<MeshRasterizer> m_pMeshesRast;
 
 		float* m_pDepthBufferPixels{};
 
@@ -97,11 +106,11 @@ using namespace dae;
 		Texture* m_pSpecularTxt;
 		Texture* m_pGlossTxt;
 
-		void RenderRasterizer(); 
+		void RenderRasterizer();
 		void UpdateRasterizer(const Timer* pTimer);
 
 		ColorRGB PixelShading(const Vertex_Out& v) const;
-		void VertexTransformationFunctionW4(std::vector<MeshRast>& meshes) const;
+		void VertexTransformationFunctionW4(std::vector<MeshRasterizer>& meshes) const;
 
 		
 

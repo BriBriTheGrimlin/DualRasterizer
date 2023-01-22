@@ -4,6 +4,7 @@
 float4x4 gWorldViewProj : WorldViewProjection;
 float4x4 gWorldMatrix : World;
 float4x4 gViewInverseMatrix : ViewInverse;
+bool gFrontCounterClockwise : FrontCounterClockwise;
 
 Texture2D gDiffuseMap : DiffuseMap;
 Texture2D gNormalMap : NormalMap;
@@ -76,9 +77,7 @@ struct VS_OUTPUT
     float3 Tangent : TANGENT;
 };
 
-//------------------------------------------------
 // BRDF
-//------------------------------------------------
 float4 CalculateLambert(float kd, float4 cd)
 {
     return cd * kd / gPI;
@@ -97,9 +96,7 @@ float CalculatePhong(float ks, float exp, float3 l, float3 v, float3 n)
     return phong;
 }
 
-// -----------------------------------------------------
 // Vertex Shader
-// -----------------------------------------------------
 VS_OUTPUT VS(VS_INPUT input)
 {
     VS_OUTPUT output = (VS_OUTPUT)0;
@@ -110,10 +107,7 @@ VS_OUTPUT VS(VS_INPUT input)
     return output;
 }
 
-// -----------------------------------------------------
 // Pixel Shader
-// -----------------------------------------------------
-
 float4 PS_Phong(VS_OUTPUT input, SamplerState state) : SV_TARGET
 {
     const float3 binormal = cross(input.Normal, input.Tangent);
@@ -146,9 +140,8 @@ float4 PS_Anisotropic(VS_OUTPUT input) : SV_TARGET
     return PS_Phong(input,gSamStateAnisotropic);
 }
 
-// -----------------------------------------------------
-// Technique (Actual shader)
-// -----------------------------------------------------
+
+// Techniques
 technique11 PointFilteringTechnique
 {
     pass P0

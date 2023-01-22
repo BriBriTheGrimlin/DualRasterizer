@@ -15,20 +15,20 @@ public:
 	Effect& operator=(Effect&&) noexcept = delete;
 
 	//Matrices transformations
-	void SetProjectionMatrix(const dae::Matrix& matrix);
-	void SetViewInvertMatrix(const dae::Matrix& matrix);
-	void SetWorldMatrix(const dae::Matrix& matrix);
+	void SetProjectionMatrix(const dae::Matrix& matrix) const;
+	void SetViewInvertMatrix(const dae::Matrix& matrix) const;
+	void SetWorldMatrix(const dae::Matrix& matrix) const;
 	//Shading
-	void SetDiffuseMap(Texture* pDiffuseTexture);
+	void SetDiffuseMap(Texture* pDiffuseTexture) const;
 
-
-	ID3DX11Effect* GetEffect();
-	ID3DX11EffectTechnique* GetTechnique();
-	ID3D11InputLayout* GetInputLayout();
+	ID3DX11Effect* GetEffect() const;
+	ID3DX11EffectTechnique* GetTechnique() const;
+	ID3D11InputLayout* GetInputLayout() const;
 
 	int GetSampleState() const;
 
 	void ToggleTechniques();
+	void ToggleCullMode();
 
 protected:
 	enum class SampleMethod
@@ -37,7 +37,15 @@ protected:
 		Linear,
 		Anisotropic
 	};
-	SampleMethod m_FilteringMethod;
+	SampleMethod m_SampleMethod;
+
+	enum class CullMode
+	{
+		Front,
+		Back,
+		None
+	};
+	CullMode m_CullMode;
 
 
 	ID3DX11Effect* m_pEffect;

@@ -34,7 +34,7 @@ int main(int argc, char* args[])
 		SDL_WINDOWPOS_UNDEFINED,
 		SDL_WINDOWPOS_UNDEFINED,
 		width, height, 0);
-
+	//Github
 	if (!pWindow)
 		return 1;
 
@@ -92,17 +92,21 @@ int main(int argc, char* args[])
 					pRenderer->ToggleBoxVisual();
 					break;
 
-			case SDL_SCANCODE_F9:
-				//pRenderer->ToggleCullMode();
-				break;
+					case SDL_SCANCODE_F9:
+					pRenderer->ToggleCullMode();
+					break;
 
-			case SDL_SCANCODE_F10:
-				pRenderer->ToggleBackGround();
-				break;
+					case SDL_SCANCODE_F10:
+					pRenderer->ToggleBackGround();
+					break;
 
-			case SDL_SCANCODE_F11:
-				g_PrintFPS = !g_PrintFPS;
-				break;
+					case SDL_SCANCODE_F11:
+					g_PrintFPS = !g_PrintFPS;
+					break;
+
+					case SDL_SCANCODE_I:
+					pRenderer->PrintText();
+					break;
 
 				}
 				break;

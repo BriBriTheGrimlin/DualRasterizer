@@ -1,7 +1,6 @@
 #pragma once
 #include "Effect.h"
 
-
 using namespace dae;
 
 class ShadedEffect final : public Effect
@@ -15,12 +14,9 @@ public:
 	ShadedEffect(ShadedEffect&& other) = delete;
 	ShadedEffect& operator=(ShadedEffect&& other) = delete;
 
-	void SetNormalMap(Texture* pNormalTexture);
-	void SetSpecularMap(Texture* pSpecularTexture);
-	void SetGlossinessMap(Texture* pGlossinessTexture);
-
-	//virtual void SetWorldMatrix(const Matrix& matrix) override;
-	//virtual void SetViewInvertMatrix(const Matrix& matrix) override;
+	void SetNormalMap(Texture* pNormalTexture) const;
+	void SetSpecularMap(Texture* pSpecularTexture) const;
+	void SetGlossinessMap(Texture* pGlossinessTexture) const;
 
 private:
 	ID3DX11EffectShaderResourceVariable* m_pNormalMapVariable{};

@@ -21,7 +21,7 @@ namespace dae
 
 
 		Vector3 origin{};
-		float fovAngle{ 90.f };
+		float fovAngle{ 45.f };
 		float fov{ tanf((fovAngle * TO_RADIANS) / 2.f) };
 		float aspectRatio{ 1.f };
 
@@ -80,10 +80,8 @@ namespace dae
 
 		void Update(const Timer* pTimer)
 		{
-			const float deltaTime = pTimer->GetElapsed();
-
 			//Camera Update Logic
-			 float movementSpeed{ 50 * deltaTime };
+			 float movementSpeed{ 50 * pTimer->GetElapsed() };
 
 			const float speedMultiplier{ 3 };
 
@@ -116,7 +114,7 @@ namespace dae
 			const uint32_t mouseState = SDL_GetRelativeMouseState(&mouseX, &mouseY);
 
 			
-			const float rotationSpeed{ 1.f * deltaTime };
+			const float rotationSpeed{ 1.f * pTimer->GetElapsed() };
 
 			if ((mouseState & SDL_BUTTON(SDL_BUTTON_LEFT)) && (mouseState & SDL_BUTTON(SDL_BUTTON_RIGHT)))
 			{
@@ -138,11 +136,12 @@ namespace dae
 			forward = finalRotation.TransformVector(Vector3::UnitZ);
 			forward.Normalize();
 
+			//if rotate camera goes left and right in world
 			right = Vector3::Cross(up, forward);
 
 			//Update Matrices
 			CalculateViewMatrix();
-			CalculateProjectionMatrix(); //Try to optimize this - should only be called once or when fov/aspectRatio changes
+			CalculateProjectionMatrix();
 		}
 	};
 }

@@ -13,6 +13,11 @@ public:
 	Texture(ID3D11Device* pDevice, const std::string& path);
 	~Texture();
 
+	Texture(const Texture&) = delete;
+	Texture(Texture&&) noexcept = delete;
+	Texture& operator=(const Texture&) = delete;
+	Texture& operator=(Texture&&) noexcept = delete;
+
 	//DirectX
 	ID3D11ShaderResourceView* GetSRV() const;
 

@@ -53,27 +53,23 @@ Effect::~Effect()
 
 void Effect::ToggleTechniques()
 {
-	const Uint8* pStates{ SDL_GetKeyboardState(nullptr) };
-		if (int(m_FilteringMethod) < 2) // < amount FilteringMethods - 1
-			m_FilteringMethod = SampleMethod(int(m_FilteringMethod) + 1);
-		else
-			m_FilteringMethod = SampleMethod(0);
-
-
-		switch (m_FilteringMethod)
+		switch (m_SampleMethod)
 		{
 		case Effect::SampleMethod::Point:
 			m_pTechnique = m_pEffect->GetTechniqueByName("PointFilteringTechnique");
+			m_SampleMethod = SampleMethod::Linear;
 			if (!m_pTechnique->IsValid())
 				std::cout << "PointTechnique not valid\n";
 			break;
 		case SampleMethod::Linear:
 			m_pTechnique = m_pEffect->GetTechniqueByName("LinearFilteringTechnique");
+			m_SampleMethod = SampleMethod::Anisotropic;
 			if (!m_pTechnique->IsValid())
 				std::cout << "LinearTechnique not valid\n";
 			break;
 		case SampleMethod::Anisotropic:
 			m_pTechnique = m_pEffect->GetTechniqueByName("AnisotropicFilteringTechnique");
+			m_SampleMethod = SampleMethod::Point;
 			if (!m_pTechnique->IsValid())
 				std::cout << "AnisotropicTechnique not valid\n";
 			break;
@@ -82,45 +78,77 @@ void Effect::ToggleTechniques()
 		}
 }
 
-void Effect::SetProjectionMatrix(const dae::Matrix& matrix)
+void Effect::ToggleCullMode()
+{
+	D3D11_RASTERIZER_DESC rasterizerDesc{};
+	rasterizerDesc.FillMode = D3D11_FILL_SOLID;
+	rasterizerDesc.FrontCounterClockwise = false;
+	rasterizerDesc.DepthBias = 0;
+	rasterizerDesc.SlopeScaledDepthBias = 0.0f;
+	rasterizerDesc.DepthBiasClamp = 0.0f;
+	rasterizerDesc.DepthClipEnable = true;
+	rasterizerDesc.ScissorEnable = false;
+	rasterizerDesc.MultisampleEnable = false;
+	rasterizerDesc.AntialiasedLineEnable = false;
+
+	switch (m_CullMode)
+	{
+	case CullMode::Front:
+		m_CullMode = CullMode::Back;
+		rasterizerDesc.CullMode = D3D11_CULL_FRONT;
+		break;
+	case CullMode::Back:
+		m_CullMode = CullMode::None;
+		rasterizerDesc.CullMode = D3D11_CULL_BACK;
+		break;
+	case CullMode::None:
+		m_CullMode = CullMode::Front;
+		rasterizerDesc.CullMode = D3D11_CULL_NONE;
+		break;
+	default:
+		break;
+	}
+}
+
+void Effect::SetProjectionMatrix(const dae::Matrix& matrix) const
 {
 	m_pMatWorldViewProjVariable->SetMatrix(reinterpret_cast<const float*>(&matrix));
 }
 
-void Effect::SetWorldMatrix(const Matrix& matrix)
+void Effect::SetWorldMatrix(const Matrix& matrix) const
 {
 	m_pWorldVariable->SetMatrix(reinterpret_cast<const float*>(&matrix));
 }
 
-void Effect::SetViewInvertMatrix(const Matrix& matrix)
+void Effect::SetViewInvertMatrix(const Matrix& matrix) const 
 {
 	m_pViewInverseVariable->SetMatrix(reinterpret_cast<const float*>(&matrix));
 }
 
-void Effect::SetDiffuseMap(Texture* pDiffuseTexture)
+void Effect::SetDiffuseMap(Texture* pDiffuseTexture) const
 {
 	if (m_pDiffuseMapVariable)
 		m_pDiffuseMapVariable->SetResource(pDiffuseTexture->GetSRV());
 }
 
-ID3DX11Effect* Effect::GetEffect()
+ID3DX11Effect* Effect::GetEffect() const
 {
 	return m_pEffect;
 }
 
-ID3DX11EffectTechnique* Effect::GetTechnique()
+ID3DX11EffectTechnique* Effect::GetTechnique() const
 {
 	return m_pTechnique;
 }
 
-ID3D11InputLayout* Effect::GetInputLayout()
+ID3D11InputLayout* Effect::GetInputLayout() const
 {
 	return m_pInputLayout;
 }
 
 int Effect::GetSampleState() const
 {
-	switch (m_FilteringMethod)
+	switch (m_SampleMethod)
 	{
 	case SampleMethod::Point:
 		return 0;

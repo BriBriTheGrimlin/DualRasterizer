@@ -2,7 +2,7 @@
 #include "DataTypes.h"
 #include "Effect.h"
 
-struct MeshRast
+struct MeshRasterizer
 {
 	std::vector<Vertex> vertices{};
 	std::vector<uint32_t> indices{};
@@ -19,10 +19,16 @@ public:
 	MeshRepresentation(ID3D11Device* pDevice, const std::string& objFilePath, Effect* pEffect);
 	~MeshRepresentation();
 
+	MeshRepresentation(const MeshRepresentation&) = delete;
+	MeshRepresentation(MeshRepresentation&&) noexcept = delete;
+	MeshRepresentation& operator=(const MeshRepresentation&) = delete;
+	MeshRepresentation& operator=(MeshRepresentation&&) noexcept = delete;
+
 	void Render(ID3D11DeviceContext* pDeviceContext);
 	void Update(const dae::Matrix& viewProjMatrix, const dae::Matrix& viewInvertMatrix, float angle, Vector3 pos);
 	void ToggleSampling() const;
 	int GetSampleState() const;
+	void ToggleCullMode() const;
 
 private:
 	ID3D11Buffer* m_pVertexBuffer;

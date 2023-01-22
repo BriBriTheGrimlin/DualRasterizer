@@ -1,4 +1,3 @@
-
 #include "pch.h"
 #include "Renderer.h"
 #include "MeshRepresentation.h"
@@ -6,13 +5,14 @@
 #include "ShadedEffect.h"
 #include "Utils.h"
 
-// https://stackoverflow.com/questions/9158150/colored-output-in-c
-#define RESET   "\033[0m"
-#define GREEN   "\033[32m"      /* Green */
-#define YELLOW  "\033[33m"      /* Yellow */
-#define MAGENTA "\033[35m"      /* Magenta */
+#define DEFAULTCOLOR   "\033[0m"
+#define RED     "\033[31m"
+#define GREEN   "\033[32m"
+#define YELLOW  "\033[33m"
+#define MAGENTA "\033[35m"
 
 using namespace dae;
+using namespace std;
 
 Renderer::Renderer(SDL_Window* pWindow) :
 	m_pWindow(pWindow)
@@ -48,7 +48,7 @@ Renderer::Renderer(SDL_Window* pWindow) :
 	m_pMeshRepresentation.push_back(new MeshRepresentation{ m_pDevice, "Resources/vehicle.obj", std::move(pShadedEffect) });
 
 	Effect* pTransparentEffect{ new Effect(m_pDevice, L"Resources/Transparent3D.fx") };
-	
+
 	Texture fireDiffuseTexture{ m_pDevice, "Resources/fireFX_diffuse.png" };
 	pTransparentEffect->SetDiffuseMap(&fireDiffuseTexture);
 	
@@ -72,35 +72,11 @@ Renderer::Renderer(SDL_Window* pWindow) :
 	m_pGlossTxt = Texture::LoadFromFile("Resources/vehicle_gloss.png");
 
 	//Mesh
-	MeshRast& mesh = m_pMeshesRast.emplace_back(MeshRast{});
+	MeshRasterizer& mesh = m_pMeshesRast.emplace_back(MeshRasterizer{});
 	Utils::ParseOBJ("Resources/vehicle.obj", mesh.vertices, mesh.indices);
 	mesh.primitiveTopology = PrimitiveTopology::TriangleList;
 
-
-	using namespace std;
-	{
-		cout << YELLOW;
-		cout << "[Key bindings - SHARED]" << '\n';
-		cout << "	[F1]  Toggle Rasterizer Mode (HARDWARE/SOFTWARE)" << '\n';
-		cout << "	[F2]  Toggle Vehicle Rotation (ON/OFF)" << '\n';
-		cout << "	[F9]  Cycle CullMode (BACK/FRONT/NONE)" << '\n';
-		cout << "	[F10] Toggle Uniform ClearColor (ON/OFF)" << '\n';
-		cout << "	[F11] Toggle Print FPS (ON/OFF)" << '\n';
-		cout << '\n';
-		cout << GREEN;
-		cout << "[Key bindings - HARDWARE]" << '\n';
-		cout << "	[F3]  Toggle FireFX (ON/OFF)" << '\n';
-		cout << "	[F4]  Cycle Sampler State (POINT/LINEAR/ANISOTROPIC)" << '\n';
-		cout << '\n';
-		cout << MAGENTA;
-		cout << "[Key bindings - SOFTWARE]" << '\n';
-		cout << "	[F5]  Cycle Shading Mode (COMBINED/OBSERVED_AREA/DIFFUSE/SPECULAR)" << '\n';
-		cout << "	[F6]  Toggle NormalMap (ON/OFF)" << '\n';
-		cout << "	[F7]  Toggle DepthBuffer Visualization (ON/OFF)" << '\n';
-		cout << "	[F8]  Toggle BoundingBox Visualization (ON/OFF)" << '\n';
-		cout << '\n';
-		cout << RESET;
-	}
+	PrintText();
 }
 
 Renderer::~Renderer()
@@ -133,14 +109,14 @@ Renderer::~Renderer()
 }
 
 HRESULT Renderer::InitializeDirectX()
-	{
+{
 		//1. Create Device & DeviceContext
 		//=====
 		D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_11_1;
 		uint32_t createDeviceFlags = 0;
-#if defined(DEBUG) || defined(_DEBUG)
+	#if defined(DEBUG) || defined(_DEBUG)
 		createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
-#endif 
+	#endif 
 		HRESULT result = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, 0, createDeviceFlags, &featureLevel,
 			1, D3D11_SDK_VERSION, &m_pDevice, nullptr, &m_pDeviceContext);
 		if (FAILED(result))
@@ -236,8 +212,35 @@ HRESULT Renderer::InitializeDirectX()
 		m_pDeviceContext->RSSetViewports(1, &viewport);
 
 		return result;
-	}
+}
 
+void Renderer::PrintText() const
+{
+		cout << YELLOW;
+		cout << "[Key bindings - SHARED]\n";
+		cout << "	[F1]  Toggle Rasterizer Mode (HARDWARE/SOFTWARE)\n";
+		cout << "	[F2]  Toggle Vehicle Rotation (ON/OFF)\n";
+		cout << "	[F9]  Cycle CullMode (BACK/FRONT/NONE)\n";
+		cout << "	[F10] Toggle Uniform ClearColor (ON/OFF)\n";
+		cout << "	[F11] Toggle Print FPS (ON/OFF)\n";
+		cout << '\n';
+		cout << GREEN;
+		cout << "[Key bindings - HARDWARE]\n";
+		cout << "	[F3]  Toggle FireMesh (ON/OFF)\n";
+		cout << "	[F4]  Cycle Sample State (POINT/LINEAR/ANISOTROPIC)\n";
+		cout << '\n';
+		cout << MAGENTA;
+		cout << "[Key bindings - SOFTWARE]\n";
+		cout << "	[F5]  Cycle Shading Mode (COMBINED/OBSERVED_AREA/DIFFUSE/SPECULAR)\n";
+		cout << "	[F6]  Toggle NormalMap (ON/OFF)\n";
+		cout << "	[F7]  Toggle DepthBuffer Visualization (ON/OFF)\n";
+		cout << "	[F8]  Toggle BoundingBox Visualization (ON/OFF)\n";
+		cout << '\n';
+		cout << RED;
+		cout << "[I] Get Information List\n";
+		cout << '\n';
+		cout << DEFAULTCOLOR;
+}
 
 void Renderer::Update(const Timer* pTimer)
 {
@@ -246,7 +249,7 @@ void Renderer::Update(const Timer* pTimer)
 	
 	if(m_RotEnabled)
 	{
-		const float rotationSpeed{ 1.f * pTimer->GetElapsed() };
+		const float rotationSpeed{ float(M_PI)/4.f * pTimer->GetElapsed() };
 		m_Angle += rotationSpeed;
 		
 	}
@@ -259,6 +262,22 @@ void Renderer::Update(const Timer* pTimer)
 		UpdateRasterizer(pTimer);
 	}
 	
+}
+
+void Renderer::UpdateDirectX(const Timer* pTimer)
+{
+	for (auto& Mesh : m_pMeshRepresentation)
+	{
+		Mesh->Update(m_Camera.GetWorldViewProjection(), m_Camera.GetInverseViewMatrix(), m_Angle, Pos);
+	}
+}
+void Renderer::UpdateRasterizer(const Timer* pTimer)
+{
+	for (MeshRasterizer& mesh : m_pMeshesRast)
+	{
+		Matrix newTrsMatrix = Matrix::CreateRotationY(m_Angle) * Matrix::CreateTranslation(Pos);
+		mesh.worldMatrix = newTrsMatrix;
+	}
 }
 
 void Renderer::Render()
@@ -304,24 +323,6 @@ void Renderer::RenderDirectX() const
 	m_pSwapChain->Present( 1, 0);
 
 }
-
-void Renderer::UpdateDirectX(const Timer* pTimer)
-{
-	for (auto& Mesh : m_pMeshRepresentation)
-	{
-		Mesh->Update(m_Camera.GetWorldViewProjection(), m_Camera.GetInverseViewMatrix(), m_Angle, Pos);
-	}
-}
-
-void Renderer::UpdateRasterizer(const Timer* pTimer)
-{
-	for (MeshRast& mesh : m_pMeshesRast)
-	{
-		Matrix newTrsMatrix = Matrix::CreateRotationY(m_Angle) * Matrix::CreateTranslation(Pos);
-		mesh.worldMatrix = newTrsMatrix;
-	}
-}
-
 void Renderer::RenderRasterizer()
 {
 	SDL_LockSurface(m_pBackBuffer);
@@ -527,9 +528,191 @@ void Renderer::RenderRasterizer()
 	SDL_UpdateWindowSurface(m_pWindow);
 }
 
-void Renderer::VertexTransformationFunctionW4(std::vector<MeshRast>& meshes) const
+//Shared
+void Renderer::ToggleMode()
 {
-	for (MeshRast& mesh : meshes)
+	m_DirectXMode = !m_DirectXMode;
+
+	if (m_DirectXMode)
+	{
+		std::cout << YELLOW << "DirectX\n";
+	}
+	else
+	{
+		std::cout << YELLOW << "Rasterizer\n";
+	}
+	std::cout << DEFAULTCOLOR;
+}
+void Renderer::ToggleRot()
+{
+	m_RotEnabled = !m_RotEnabled;
+
+	if(m_RotEnabled)
+	{
+		std::cout << YELLOW << "Rotation Enabled\n";
+	}
+	else
+	{
+		std::cout << YELLOW << "Rotation Disabled\n";
+	}
+	std::cout << DEFAULTCOLOR;
+}
+
+void Renderer::ToggleCullMode()
+{
+	std::cout << YELLOW << " Does Not Work!\n";
+	std::cout << DEFAULTCOLOR;
+	for (const auto& pMesh : m_pMeshRepresentation)
+	{
+		pMesh->ToggleCullMode();
+	}
+}
+
+void Renderer::ToggleBackGround()
+{
+	m_UniformBackGround = !m_UniformBackGround;
+
+	if(m_UniformBackGround)
+	{
+		std::cout << YELLOW << "Uniformed BackGround\n";
+	}
+	else
+	{
+		std::cout << YELLOW << "Unique BackGround\n";
+	}
+	std::cout << DEFAULTCOLOR;
+}
+
+//Hardware
+void Renderer::ToggleFireMesh()
+{
+	if (m_DirectXMode)
+	{
+		m_FireMeshEnabled = !m_FireMeshEnabled;
+	}
+	if(m_FireMeshEnabled)
+	{
+		std::cout << GREEN << " FireMesh Enabled\n";
+	}
+	else
+	{
+		std::cout << GREEN << " FireMesh Disabled\n";
+	}
+	std::cout << DEFAULTCOLOR;
+}
+void Renderer::ToggleSampling() const
+{
+	if (m_DirectXMode)
+	{
+		for (auto& Mesh : m_pMeshRepresentation)
+		{
+			Mesh->ToggleSampling();
+
+			
+		}
+		if (m_pMeshRepresentation[0]->GetSampleState() == 0)
+		{
+			std::cout << GREEN << " Point\n";
+		}
+		if (m_pMeshRepresentation[0]->GetSampleState() == 1)
+		{
+			std::cout << GREEN << " Linear\n";
+		}
+		if (m_pMeshRepresentation[0]->GetSampleState() == 2)
+		{
+			std::cout << GREEN << " Anisotropic\n";
+		}
+		std::cout << DEFAULTCOLOR;
+	}
+	
+}
+
+//Rasterizer
+void Renderer::ToggleNor()
+{
+	if (!m_DirectXMode)
+	{
+		m_NorEnabled = !m_NorEnabled;
+
+		if(m_NorEnabled)
+		{
+			std::cout << MAGENTA << "Normals Enabled\n";
+		}
+		else
+		{
+			std::cout << MAGENTA << "Normals Disabled\n";
+		}
+	}
+	std::cout << DEFAULTCOLOR;
+}
+void Renderer::ToggleBuffer()
+{
+	if (!m_DirectXMode)
+	{
+		m_VisBuffer = !m_VisBuffer;
+
+
+		if (m_VisBuffer)
+		{
+			std::cout << MAGENTA << "Visual Buffer Enabled\n";
+		}
+		else
+		{
+			std::cout << MAGENTA << " visual Buffer Disabled\n";
+		}
+	}
+	std::cout << DEFAULTCOLOR;
+}
+void Renderer::ToggleBoxVisual()
+{
+	if (!m_DirectXMode)
+	{
+		m_VisBox = !m_VisBox;
+
+		if (m_VisBox)
+		{
+			std::cout << MAGENTA << "Visual Box Enabled\n";
+		}
+		else
+		{
+			std::cout << MAGENTA << "Visual Box Disabled\n";
+		}
+	}
+	std::cout << DEFAULTCOLOR;
+}
+void Renderer::ToggleLightMode()
+{
+	if (!m_DirectXMode)
+	{
+		switch (m_CurrentLightmode)
+		{
+		case LightMode::Combined:
+			m_CurrentLightmode = LightMode::Diffuse;
+			std::cout << MAGENTA << "Diffuse\n";
+			break;
+		case LightMode::Diffuse:
+			m_CurrentLightmode = LightMode::Specular;
+			std::cout << MAGENTA << "Specular\n";
+			break;
+		case LightMode::Specular:
+			m_CurrentLightmode = LightMode::ObservedArea;
+			std::cout << MAGENTA << "ObservedArea\n";
+			break;
+		case LightMode::ObservedArea:
+			m_CurrentLightmode = LightMode::Combined;
+			std::cout << MAGENTA << "Combined\n";
+			break;
+		default:
+			break;
+		}
+	}
+
+	std::cout << DEFAULTCOLOR;
+}
+
+void Renderer::VertexTransformationFunctionW4(std::vector<MeshRasterizer>& meshes) const
+{
+	for (MeshRasterizer& mesh : meshes)
 	{
 		const Matrix matrix = mesh.worldMatrix * (m_Camera.viewMatrix * m_Camera.projectionMatrix);
 
@@ -562,181 +745,6 @@ void Renderer::VertexTransformationFunctionW4(std::vector<MeshRast>& meshes) con
 		}
 	}
 }
-
-
-
-//Shared
-void Renderer::ToggleMode()
-{
-	m_DirectXMode = !m_DirectXMode;
-
-	if (m_DirectXMode)
-	{
-		std::cout << YELLOW << "DirectX\n";
-	}
-	else
-	{
-		std::cout << YELLOW << "Rasterizer\n";
-	}
-	std::cout << RESET;
-}
-void Renderer::ToggleRot()
-{
-	m_RotEnabled = !m_RotEnabled;
-
-	if(m_RotEnabled)
-	{
-		std::cout << YELLOW << "Rotation Enabled\n";
-	}
-	else
-	{
-		std::cout << YELLOW << "Rotation Disabled\n";
-	}
-	std::cout << RESET;
-}
-void Renderer::ToggleBackGround()
-{
-	m_UniformBackGround = !m_UniformBackGround;
-
-	if(m_UniformBackGround)
-	{
-		std::cout << YELLOW << "Uniformed BackGround\n";
-	}
-	else
-	{
-		std::cout << YELLOW << "Unique BackGround\n";
-	}
-	std::cout << RESET;
-}
-
-//Hardware
-void Renderer::ToggleFireMesh()
-{
-	if (m_DirectXMode)
-	{
-		m_FireMeshEnabled = !m_FireMeshEnabled;
-	}
-	if(m_FireMeshEnabled)
-	{
-		std::cout << GREEN << " FireMesh Enabled\n";
-	}
-	else
-	{
-		std::cout << GREEN << " FireMesh Disabled\n";
-	}
-	std::cout << RESET;
-}
-void Renderer::ToggleSampling() const
-{
-	if (m_DirectXMode)
-	{
-		for (auto& Mesh : m_pMeshRepresentation)
-		{
-			Mesh->ToggleSampling();
-
-			
-		}
-		if (m_pMeshRepresentation[0]->GetSampleState() == 0)
-		{
-			std::cout << GREEN << " Point\n";
-		}
-		if (m_pMeshRepresentation[0]->GetSampleState() == 1)
-		{
-			std::cout << GREEN << " Linear\n";
-		}
-		if (m_pMeshRepresentation[0]->GetSampleState() == 2)
-		{
-			std::cout << GREEN << " Anisotropic\n";
-		}
-		std::cout << RESET;
-	}
-	
-}
-
-//Rasterizer
-void Renderer::ToggleNor()
-{
-	if (!m_DirectXMode)
-	{
-		m_NorEnabled = !m_NorEnabled;
-
-		if(m_NorEnabled)
-		{
-			std::cout << MAGENTA << "Normals Enabled\n";
-		}
-		else
-		{
-			std::cout << MAGENTA << "Normals Disabled\n";
-		}
-	}
-	std::cout << RESET;
-}
-void Renderer::ToggleBuffer()
-{
-	if (!m_DirectXMode)
-	{
-		m_VisBuffer = !m_VisBuffer;
-
-
-		if (m_VisBuffer)
-		{
-			std::cout << MAGENTA << "Visual Buffer Enabled\n";
-		}
-		else
-		{
-			std::cout << MAGENTA << " visual Buffer Disabled\n";
-		}
-	}
-	std::cout << RESET;
-}
-void Renderer::ToggleBoxVisual()
-{
-	if (!m_DirectXMode)
-	{
-		m_VisBox = !m_VisBox;
-
-		if (m_VisBox)
-		{
-			std::cout << MAGENTA << "Visual Box Enabled\n";
-		}
-		else
-		{
-			std::cout << MAGENTA << "Visual Box Disabled\n";
-		}
-	}
-	std::cout << RESET;
-}
-void Renderer::ToggleLightMode()
-{
-	if (!m_DirectXMode)
-	{
-		switch (m_CurrentLightmode)
-		{
-		case LightMode::Combined:
-			m_CurrentLightmode = LightMode::Diffuse;
-			std::cout << MAGENTA << "Diffuse\n";
-			break;
-		case LightMode::Diffuse:
-			m_CurrentLightmode = LightMode::Specular;
-			std::cout << MAGENTA << "Specular\n";
-			break;
-		case LightMode::Specular:
-			m_CurrentLightmode = LightMode::ObservedArea;
-			std::cout << MAGENTA << "ObservedArea\n";
-			break;
-		case LightMode::ObservedArea:
-			m_CurrentLightmode = LightMode::Combined;
-			std::cout << MAGENTA << "Combined\n";
-			break;
-		default:
-			break;
-		}
-	}
-
-	std::cout << RESET;
-}
-
-
 ColorRGB Renderer::PixelShading(const Vertex_Out& v) const
 {
 	const Vector3 lightDirection{ .577f, -.577f, .577f };
